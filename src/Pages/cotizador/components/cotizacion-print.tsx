@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import { costoAdicional } from "../page";
-import logo from "@/assets/NOVAPOSPNG.png";
+import logo from "@/assets/GUSTITOPNG.png";
 import { CartItem } from "@/Types/POS/interfaces";
 import { Sucursal } from "@/Types/Sucursal/Sucursal_Info";
 
@@ -38,14 +38,13 @@ const CotizacionPrint = forwardRef<HTMLDivElement, Props>((props, ref) => {
   const today = new Date();
   const fechaStr = today.toLocaleDateString("es-GT");
 
-  // const VERDE = "#A24BA1"; // morado principal del logo
-  // const VERDE2 = "#C47CC6"; // morado claro / fondo
-  const ROJO = "#F5F5F5"; // rosa/fucsia del logo
+  // const ROJO = "#F5F5F5"; // rosa/fucsia del logo
+  // const VERDE = "#2DBE8D"; // verde principal (V y NOVA)
+  // const VERDE2 = "#7ED8B8"; // verde claro (variación / hover / fondos suaves)
 
-  const VERDE = "#2DBE8D"; // verde principal (V y NOVA)
-  const VERDE2 = "#7ED8B8"; // verde claro (variación / hover / fondos suaves)
-  // const NEGRO = "#0A0A0A"; // negro del logo
-  // const GRIS = "#F5F5F5"; // fondo claro
+  const ROJO = "#D89292"; // rosa pastel del texto "Postres & Pasteles"
+  const VERDE = "#803880"; // morado principal del logo "GUSTITO"
+  const VERDE2 = "#D8A0C0"; // rosa/lila claro para hover o fondos suaves
 
   return (
     <div

@@ -16,21 +16,34 @@ export function AnalyticsSummaryCard({
   dotClassName,
 }: AnalyticsSummaryCardProps) {
   return (
-    <article className={dashboardColors.card.base}>
-      <div className="mb-3 flex items-center gap-2">
+    <article className={`${dashboardColors.card.base} min-w-0 overflow-hidden`}>
+      <div className="mb-2 flex min-w-0 items-center gap-2">
         {dotClassName ? (
-          <span className={`h-2 w-2 rounded-full ${dotClassName}`} />
+          <span className={`h-2 w-2 shrink-0 rounded-full ${dotClassName}`} />
         ) : null}
 
-        <p className={dashboardColors.text.label}>{label}</p>
+        <p
+          className={`${dashboardColors.text.label} min-w-0 truncate text-[10px] leading-4 tracking-[0.32em]`}
+          title={label}
+        >
+          {label}
+        </p>
       </div>
 
-      <p className={`${dashboardColors.text.value} ${accentClassName}`}>
+      <p
+        className={`${dashboardColors.text.value} ${accentClassName} min-w-0 truncate text-[clamp(1.25rem,2.4vw,2.125rem)] leading-tight`}
+        title={value}
+      >
         {value}
       </p>
 
       {description ? (
-        <p className={dashboardColors.text.description}>{description}</p>
+        <p
+          className={`${dashboardColors.text.description} mt-1 min-w-0 truncate text-xs leading-4`}
+          title={description}
+        >
+          {description}
+        </p>
       ) : null}
     </article>
   );
