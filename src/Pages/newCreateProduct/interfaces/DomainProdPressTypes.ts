@@ -49,10 +49,43 @@ export interface BasicInfo {
   stockMinimo: number;
   precioCostoActual: number;
   categorias: Categoria[];
-  // relación flexible nuevo
+
+  tipoInventario: TipoProductoInventario;
+  visibleEnPos: boolean;
+
   tipoPresentacionId: number | null;
-  tipoPresentacion?: TipoPresentacion | null; // para mostrar label sin re-fetch
+  tipoPresentacion?: TipoPresentacion | null;
 }
+
+export enum TipoProductoInventario {
+  PRODUCTO_VENTA = "PRODUCTO_VENTA",
+  EMPAQUE = "EMPAQUE",
+  INSUMO = "INSUMO",
+  MATERIAL_OPERATIVO = "MATERIAL_OPERATIVO",
+}
+
+export const TIPO_PRODUCTO_INVENTARIO_OPTIONS = [
+  {
+    value: TipoProductoInventario.PRODUCTO_VENTA,
+    label: "Producto de venta",
+    description: "Aparece en POS y puede venderse normalmente.",
+  },
+  {
+    value: TipoProductoInventario.EMPAQUE,
+    label: "Empaque",
+    description: "Se usa como consumo asociado a la venta.",
+  },
+  {
+    value: TipoProductoInventario.INSUMO,
+    label: "Insumo",
+    description: "Producto interno para operación o producción.",
+  },
+  {
+    value: TipoProductoInventario.MATERIAL_OPERATIVO,
+    label: "Material operativo",
+    description: "Material usado internamente.",
+  },
+] as const;
 
 // ===== Presentación (UI) =====
 // Compatible para crear/editar y para anidar dentro del producto en el editor
@@ -100,6 +133,9 @@ export interface ProductDetailDTO {
   stockMinimo: number;
 
   categorias: Categoria[];
+
+  tipoInventario: TipoProductoInventario;
+  visibleEnPos: boolean;
 
   // relación opcional a nivel producto
   tipoPresentacionId: number | null;
@@ -150,8 +186,11 @@ export interface ProductCreatePayload {
   codigoProveedor?: string | null;
   stockMinimo: number;
   precioCostoActual?: number | null;
+  tipoInventario: TipoProductoInventario;
+  visibleEnPos: boolean;
   categoriaIds: ID[];
   precios: PrecioProducto[];
+
   presentaciones: PresentacionCreatePayload[];
   // imágenes van por FormData
 }

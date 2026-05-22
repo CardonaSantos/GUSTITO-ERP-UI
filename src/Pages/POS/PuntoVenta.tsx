@@ -11,7 +11,17 @@ import { Link } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/es";
 import { toast } from "sonner";
-import { CheckCircle, Coins, Package, Receipt } from "lucide-react";
+import {
+  CheckCircle,
+  Coins,
+  Minus,
+  Package,
+  PackageCheck,
+  Plus,
+  Receipt,
+  Search,
+  X,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -58,7 +68,10 @@ import { ComprobanteSelector } from "./Components/ComprobanteSelector";
 import { TipoComprobante } from "./interfaces";
 import { MetodoPagoMainPOS } from "./interfaces/methodPayment";
 import type { NewQueryDTO } from "./interfaces/interfaces";
-import { ProductoData } from "./interfaces/newProductsPOSResponse";
+import {
+  ProductoData,
+  ProductosResponse,
+} from "./interfaces/newProductsPOSResponse";
 import { FormCreditoState } from "./credito-props-components/credito-venta.interfaces";
 
 import type {
@@ -130,8 +143,9 @@ const POS_FILTERS_SCHEMA: UrlQuerySchema<PosUrlFilters> = {
   },
 };
 
-const EMPTY_PRODUCTS_RESPONSE = {
+const EMPTY_PRODUCTS_RESPONSE: ProductosResponse = {
   data: [],
+  empaques: [],
   meta: {
     limit: 10,
     page: 1,
@@ -140,6 +154,7 @@ const EMPTY_PRODUCTS_RESPONSE = {
     totals: {
       presentaciones: 0,
       productos: 0,
+      empaques: 0,
     },
   },
 };
@@ -216,11 +231,29 @@ function defaultMapToCartProduct(p: ProductoData): ProductoPOS {
   };
 }
 
+export type EmpaqueSeleccionadoMap = Record<number, number>;
+
+function getTotalStockProductoData(p: ProductoData) {
+  return (p.stocks ?? []).reduce((acc, s) => acc + Number(s.cantidad ?? 0), 0);
+}
+
+function buildEmpaquesPayload(seleccionados: EmpaqueSeleccionadoMap) {
+  return Object.entries(seleccionados)
+    .map(([productoId, cantidad]) => ({
+      productoId: Number(productoId),
+      cantidad: Number(cantidad),
+    }))
+    .filter((x) => Number.isFinite(x.productoId) && x.cantidad > 0);
+}
+
 export default function PuntoVenta() {
+  const [isEmpaquesDialogOpen, setIsEmpaquesDialogOpen] = useState(false);
+  const [empaquesSeleccionados, setEmpaquesSeleccionados] =
+    useState<EmpaqueSeleccionadoMap>({});
+
   const userId = useStore((state) => state.userId) ?? 0;
   const userRol = useStore((state) => state.userRol) ?? "";
   const sucursalId = useStore((state) => state.sucursalId) ?? 0;
-
   const { value: urlFilters, patchValue: patchUrlFilters } = useUrlQueryState(
     POS_FILTERS_SCHEMA,
     {
@@ -419,7 +452,9 @@ export default function PuntoVenta() {
   const productos: ProductoData[] = Array.isArray(productsResponse.data)
     ? productsResponse.data
     : [];
-
+  const empaques: ProductoData[] = Array.isArray(productsResponse.empaques)
+    ? productsResponse.empaques
+    : [];
   const meta = productsResponse.meta ?? {
     page: 1,
     limit: 10,
@@ -571,6 +606,8 @@ export default function PuntoVenta() {
     setNit("");
     setObservaciones("");
     setScanInput("");
+    setEmpaquesSeleccionados({});
+    setIsEmpaquesDialogOpen(false);
 
     patchUrlFilters({
       q: "",
@@ -731,6 +768,25 @@ export default function PuntoVenta() {
     }
   };
 
+  const handleStartCheckout = useCallback(() => {
+    if (cart.length <= 0) {
+      toast.warning("No hay productos en el carrito");
+      return;
+    }
+
+    if (empaques.length > 0) {
+      setIsEmpaquesDialogOpen(true);
+      return;
+    }
+
+    setIsDialogOpen(true);
+  }, [cart.length, empaques.length]);
+
+  const handleConfirmEmpaques = useCallback(() => {
+    setIsEmpaquesDialogOpen(false);
+    setIsDialogOpen(true);
+  }, []);
+
   const handleCompleteSale = async () => {
     setIsDisableButton(true);
 
@@ -746,6 +802,7 @@ export default function PuntoVenta() {
           ? { presentacionId: item.id }
           : { productoId: item.id }),
       })),
+      empaques: buildEmpaquesPayload(empaquesSeleccionados),
       metodoPago: paymentMethod || "CONTADO",
       tipoComprobante,
       referenciaPago,
@@ -876,7 +933,8 @@ export default function PuntoVenta() {
             onUpdateQuantity={updateQuantityByUid}
             onUpdatePrice={updatePriceByUid}
             onRemoveFromCart={removeFromCartByUid}
-            onCompleteSale={() => setIsDialogOpen(true)}
+            // onCompleteSale={() => setIsDialogOpen(true)}
+            onCompleteSale={handleStartCheckout}
             formatCurrency={(n) => formatMonedaGT(n)}
           />
         </div>
@@ -1074,6 +1132,16 @@ export default function PuntoVenta() {
         </DialogContent>
       </Dialog>
 
+      <EmpaquesVentaDialog
+        open={isEmpaquesDialogOpen}
+        onOpenChange={setIsEmpaquesDialogOpen}
+        empaques={empaques}
+        seleccionados={empaquesSeleccionados}
+        onChangeSeleccionados={setEmpaquesSeleccionados}
+        onConfirm={handleConfirmEmpaques}
+        formatCurrency={(n) => formatMonedaGT(n)}
+      />
+
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <div className="bg-muted/30 p-4">
@@ -1112,6 +1180,38 @@ export default function PuntoVenta() {
                   </div>
                 ))}
               </div>
+
+              {buildEmpaquesPayload(empaquesSeleccionados).length > 0 && (
+                <div className="rounded-lg border p-3 space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                    <PackageCheck className="h-3 w-3" />
+                    Empaques a consumir
+                  </div>
+
+                  <div className="space-y-1 max-h-20 overflow-y-auto">
+                    {buildEmpaquesPayload(empaquesSeleccionados).map((item) => {
+                      const empaque = empaques.find(
+                        (e) => e.id === item.productoId,
+                      );
+
+                      return (
+                        <div
+                          key={item.productoId}
+                          className="flex justify-between items-center text-xs"
+                        >
+                          <span className="text-muted-foreground truncate">
+                            {empaque?.nombre ?? `Empaque #${item.productoId}`} ×{" "}
+                            {item.cantidad}
+                          </span>
+                          <span className="font-medium text-muted-foreground">
+                            Sin costo
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               <Separator />
 
@@ -1193,5 +1293,304 @@ export default function PuntoVenta() {
         </DialogContent>
       </Dialog>
     </PageTransition>
+  );
+}
+interface EmpaquesVentaDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  empaques: ProductoData[];
+  seleccionados: EmpaqueSeleccionadoMap;
+  onChangeSeleccionados: React.Dispatch<
+    React.SetStateAction<EmpaqueSeleccionadoMap>
+  >;
+  onConfirm: () => void;
+  formatCurrency: (amount: number) => string;
+}
+function EmpaquesVentaDialog({
+  open,
+  onOpenChange,
+  empaques,
+  seleccionados,
+  onChangeSeleccionados,
+  onConfirm,
+}: EmpaquesVentaDialogProps) {
+  const [search, setSearch] = React.useState("");
+
+  const selectedCount = React.useMemo(
+    () =>
+      Object.values(seleccionados).reduce(
+        (acc, qty) => acc + Number(qty ?? 0),
+        0,
+      ),
+    [seleccionados],
+  );
+
+  const filteredEmpaques = React.useMemo(() => {
+    const term = search.trim().toLowerCase();
+
+    if (!term) return empaques;
+
+    return empaques.filter((item) => {
+      const nombre = item.nombre?.toLowerCase() ?? "";
+      const codigo = item.codigoProducto?.toLowerCase() ?? "";
+      const descripcion = item.descripcion?.toLowerCase() ?? "";
+
+      return (
+        nombre.includes(term) ||
+        codigo.includes(term) ||
+        descripcion.includes(term)
+      );
+    });
+  }, [empaques, search]);
+
+  const setQty = React.useCallback(
+    (producto: ProductoData, nextQty: number) => {
+      const stock = getTotalStockProductoData(producto);
+      const safeQty = Math.max(0, Math.min(Number(nextQty) || 0, stock));
+
+      onChangeSeleccionados((prev) => {
+        const next = { ...prev };
+
+        if (safeQty <= 0) {
+          delete next[producto.id];
+          return next;
+        }
+
+        next[producto.id] = safeQty;
+        return next;
+      });
+    },
+    [onChangeSeleccionados],
+  );
+
+  const clearAll = React.useCallback(() => {
+    onChangeSeleccionados({});
+  }, [onChangeSeleccionados]);
+
+  React.useEffect(() => {
+    if (!open) {
+      setSearch("");
+    }
+  }, [open]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className="
+          w-[96vw] max-w-[1100px] p-0 overflow-hidden
+          sm:max-w-[1100px]
+        "
+      >
+        <div className="border-b bg-muted/30 px-4 py-3">
+          <DialogHeader className="space-y-1">
+            <div className="flex items-center gap-2">
+              <div className="rounded-full bg-primary/10 p-1.5">
+                <PackageCheck className="h-4 w-4 text-primary" />
+              </div>
+
+              <div className="min-w-0">
+                <DialogTitle className="text-sm font-semibold">
+                  Seleccionar empaques
+                </DialogTitle>
+
+                <DialogDescription className="text-xs">
+                  Selecciona los empaques usados. No afectan el total de venta.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+        </div>
+
+        <div className="p-3 space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto] gap-2 items-center">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar por nombre, código o descripción..."
+                className="h-8 pl-8 pr-8 text-xs"
+                autoFocus
+              />
+
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between md:justify-end gap-2">
+              <Badge variant="outline" className="h-7 px-2 text-[11px]">
+                {filteredEmpaques.length} visibles
+              </Badge>
+
+              <Badge variant="secondary" className="h-7 px-2 text-[11px]">
+                {selectedCount} seleccionados
+              </Badge>
+            </div>
+          </div>
+
+          <div
+            className="
+              max-h-[60vh] overflow-y-auto rounded-md border bg-background
+              p-2
+            "
+          >
+            {filteredEmpaques.length > 0 ? (
+              <div
+                className="
+                  grid gap-2
+                  grid-cols-1
+                  sm:grid-cols-2
+                  lg:grid-cols-3
+                  xl:grid-cols-4
+                "
+              >
+                {filteredEmpaques.map((empaque) => {
+                  const stock = getTotalStockProductoData(empaque);
+                  const qty = seleccionados[empaque.id] ?? 0;
+                  const isOut = stock <= 0;
+                  const selected = qty > 0;
+
+                  return (
+                    <div
+                      key={empaque.id}
+                      className={[
+                        "rounded-md border px-2.5 py-2 transition-colors",
+                        selected
+                          ? "border-primary bg-primary/5"
+                          : "bg-card hover:bg-muted/30",
+                        isOut ? "opacity-60" : "",
+                      ].join(" ")}
+                    >
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-medium">
+                              {empaque.nombre}
+                            </p>
+
+                            <p className="truncate text-[10px] text-muted-foreground">
+                              {empaque.codigoProducto}
+                            </p>
+                          </div>
+
+                          <Badge
+                            variant={isOut ? "destructive" : "outline"}
+                            className="shrink-0 text-[10px] px-1.5 py-0"
+                          >
+                            {stock}
+                          </Badge>
+                        </div>
+
+                        {empaque.descripcion && (
+                          <p className="line-clamp-2 text-[10px] text-muted-foreground leading-snug">
+                            {empaque.descripcion}
+                          </p>
+                        )}
+
+                        <div className="flex items-center justify-between gap-2 pt-1">
+                          <span className="text-[10px] text-muted-foreground">
+                            Cantidad
+                          </span>
+
+                          <div className="flex items-center gap-1">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="h-7 w-7"
+                              disabled={qty <= 0}
+                              onClick={() => setQty(empaque, qty - 1)}
+                            >
+                              <Minus className="h-3.5 w-3.5" />
+                            </Button>
+
+                            <Input
+                              type="number"
+                              min={0}
+                              max={stock}
+                              value={qty}
+                              disabled={isOut}
+                              onChange={(e) =>
+                                setQty(empaque, Number(e.target.value))
+                              }
+                              className="h-7 w-14 px-1 text-center text-xs"
+                            />
+
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="h-7 w-7"
+                              disabled={isOut || qty >= stock}
+                              onClick={() => setQty(empaque, qty + 1)}
+                            >
+                              <Plus className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex min-h-[220px] items-center justify-center text-center">
+                <div className="space-y-1">
+                  <PackageCheck className="mx-auto h-6 w-6 text-muted-foreground" />
+                  <p className="text-xs font-medium">
+                    No se encontraron empaques
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Prueba con otro nombre o código.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col-reverse gap-2 border-t pt-3 sm:flex-row sm:items-center sm:justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              onClick={clearAll}
+              disabled={selectedCount <= 0}
+            >
+              Limpiar selección
+            </Button>
+
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                className="h-8 flex-1 text-xs sm:w-32"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancelar
+              </Button>
+
+              <Button
+                type="button"
+                size="sm"
+                className="h-8 flex-1 text-xs sm:w-40"
+                onClick={onConfirm}
+              >
+                Continuar
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

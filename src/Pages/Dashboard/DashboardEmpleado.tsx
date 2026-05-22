@@ -5,43 +5,54 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ShoppingCart, History, Package, Users, Calendar } from "lucide-react";
+import {
+  ShoppingCart,
+  History,
+  PackageSearch,
+  UsersRound,
+  WalletCards,
+  ArrowLeftRight,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 export default function DashboardEmpleado() {
   const menuItems = [
     {
       title: "Punto de Venta",
-      description: "Hacer y registrar ventas",
+      description: "Registrar ventas y emitir comprobantes.",
       icon: ShoppingCart,
       route: "/punto-venta",
     },
     {
       title: "Historial de Ventas",
-      description: "Ver registro de ventas pasadas",
+      description: "Consultar ventas realizadas anteriormente.",
       icon: History,
       route: "/historial/ventas",
     },
     {
       title: "Inventario",
-      description: "Gestionar productos en stock",
-      icon: Package,
+      description: "Gestionar productos, existencias y stock.",
+      icon: PackageSearch,
       route: "/inventario-stock",
     },
-
     {
       title: "Clientes",
-      description: "Gestionar información de clientes",
-      icon: Users,
+      description: "Administrar información y datos de clientes.",
+      icon: UsersRound,
       route: "/clientes-manage",
     },
     {
-      title: "Vencimientos",
-      description: "Ver productos próximos a vencer",
-      icon: Calendar,
-      route: "/vencimientos",
+      title: "Caja Operativa",
+      description: "Aperturar caja, registrar ingresos y egresos.",
+      icon: WalletCards,
+      route: "/registro-caja",
+    },
+    {
+      title: "Movimientos Financieros y Turnos",
+      description: "Consultar movimientos, cierres y turnos de caja.",
+      icon: ArrowLeftRight,
+      route: "/movimientos-financieros",
     },
   ];
-
   return (
     <div className="container mx-auto p-1">
       <Card className="w-full">

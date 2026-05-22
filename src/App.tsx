@@ -439,18 +439,18 @@ function App() {
             <Route
               path="/movimientos-financieros"
               element={
-                <ProtectRouteAdmin>
+                <ProtectedRoute>
                   <CajaRegistros />
-                </ProtectRouteAdmin>
+                </ProtectedRoute>
               }
             />
 
             <Route
               path="/caja/:id"
               element={
-                <ProtectRouteAdmin>
+                <ProtectedRoute>
                   <CajaDetalle />
-                </ProtectRouteAdmin>
+                </ProtectedRoute>
               }
             />
 
@@ -466,9 +466,9 @@ function App() {
             <Route
               path="/movimiento-caja/:id"
               element={
-                <ProtectRouteAdmin>
+                <ProtectedRoute>
                   <MovimientoCajaDetalle />
-                </ProtectRouteAdmin>
+                </ProtectedRoute>
               }
             />
 
@@ -727,36 +727,36 @@ function App() {
             <Route
               path="/requisiciones"
               element={
-                <ProtectRouteAdmin>
+                <ProtectedRoute>
                   <RequisitionBuilder />
-                </ProtectRouteAdmin>
+                </ProtectedRoute>
               }
             />
 
             <Route
               path="/requisicion-edit/:requisicionID"
               element={
-                <ProtectRouteAdmin>
+                <ProtectedRoute>
                   <RequisitionEditor />
-                </ProtectRouteAdmin>
+                </ProtectedRoute>
               }
             />
 
             <Route
               path="/compras"
               element={
-                <ProtectRouteAdmin>
+                <ProtectedRoute>
                   <ComprasMainPage />
-                </ProtectRouteAdmin>
+                </ProtectedRoute>
               }
             />
 
             <Route
               path="/compra/:id"
               element={
-                <ProtectRouteAdmin>
+                <ProtectedRoute>
                   <CompraDetalle />
-                </ProtectRouteAdmin>
+                </ProtectedRoute>
               }
             />
 
@@ -790,9 +790,9 @@ function App() {
             <Route
               path="/pdf-requisicion/:id"
               element={
-                <ProtectRouteAdmin>
+                <ProtectedRoute>
                   <RequisicionPDF />
-                </ProtectRouteAdmin>
+                </ProtectedRoute>
               }
             />
 

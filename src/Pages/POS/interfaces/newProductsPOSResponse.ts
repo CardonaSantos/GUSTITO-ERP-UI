@@ -1,5 +1,6 @@
 export interface ProductosResponse {
   data: ProductoData[];
+  empaques: ProductoData[];
   meta: MetaData;
 }
 
@@ -13,8 +14,15 @@ export interface ProductoData {
   stocks: Stock[];
   globalStocks: Stock[];
   stocksBySucursal: StockBySucursal[];
-  images: Image[]; // vacío, pero tipado para futuro uso
+  images: Image[];
   __source: string;
+
+  tipoInventario?:
+    | "PRODUCTO_VENTA"
+    | "EMPAQUE"
+    | "INSUMO"
+    | "MATERIAL_OPERATIVO";
+  visibleEnPos?: boolean;
 }
 
 export interface Precio {
@@ -53,5 +61,6 @@ export interface MetaData {
   totals: {
     productos: number;
     presentaciones: number;
+    empaques?: number;
   };
 }
