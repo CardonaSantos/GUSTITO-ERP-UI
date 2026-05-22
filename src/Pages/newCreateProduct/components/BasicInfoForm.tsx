@@ -1,13 +1,26 @@
 "use client";
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Box, Barcode, Asterisk, SquareMinus, DollarSign } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import {
+  Box,
+  Barcode,
+  Asterisk,
+  SquareMinus,
+  DollarSign,
+  PackageCheck,
+  Store,
+  EyeOff,
+} from "lucide-react";
 import { ReusableSelect } from "@/utils/components/ReactSelectComponent/ReusableSelect";
 import {
   BasicInfo,
   Categoria,
   TipoPresentacion,
+  TipoProductoInventario,
+  TIPO_PRODUCTO_INVENTARIO_OPTIONS,
 } from "../interfaces/DomainProdPressTypes";
 
 interface Props {
@@ -16,6 +29,7 @@ interface Props {
   packagingTypes: TipoPresentacion[];
   onChange: (next: BasicInfo) => void;
 }
+
 export function BasicInfoForm({
   value,
   categories,
@@ -24,6 +38,21 @@ export function BasicInfoForm({
 }: Props) {
   const patch = (partial: Partial<BasicInfo>) =>
     onChange({ ...value, ...partial });
+
+  const tipoInventario =
+    value.tipoInventario ?? TipoProductoInventario.PRODUCTO_VENTA;
+
+  const isProductoVenta =
+    tipoInventario === TipoProductoInventario.PRODUCTO_VENTA;
+
+  const handleTipoInventarioChange = (next: TipoProductoInventario) => {
+    const shouldBeVisibleInPos = next === TipoProductoInventario.PRODUCTO_VENTA;
+
+    patch({
+      tipoInventario: next,
+      visibleEnPos: shouldBeVisibleInPos,
+    });
+  };
 
   return (
     <Card className="w-full">
@@ -126,6 +155,39 @@ export function BasicInfoForm({
           </div>
 
           <div className="space-y-1">
+            <Label htmlFor="tipoInventario" className="text-xs">
+              Tipo de inventario
+            </Label>
+
+            <div className="relative">
+              <select
+                id="tipoInventario"
+                value={tipoInventario}
+                onChange={(e) =>
+                  handleTipoInventarioChange(
+                    e.target.value as TipoProductoInventario,
+                  )
+                }
+                className="h-9 w-full rounded-md border border-input bg-background px-3 pr-8 text-xs shadow-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                {TIPO_PRODUCTO_INVENTARIO_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+
+              <PackageCheck className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4 pointer-events-none" />
+            </div>
+
+            <p className="text-[11px] text-muted-foreground leading-snug">
+              {TIPO_PRODUCTO_INVENTARIO_OPTIONS.find(
+                (opt) => opt.value === tipoInventario,
+              )?.description ?? "Clasificación operativa del producto."}
+            </p>
+          </div>
+
+          <div className="space-y-1">
             <Label>Tipo de presentación (opcional)</Label>
             <ReusableSelect<TipoPresentacion>
               items={packagingTypes}
@@ -145,6 +207,34 @@ export function BasicInfoForm({
                 menuPortalTarget: document.body,
               }}
             />
+          </div>
+
+          <div className="md:col-span-2 rounded-md border bg-muted/20 px-3 py-2">
+            <div className="flex items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-1.5">
+                  {isProductoVenta ? (
+                    <Store className="h-3.5 w-3.5 text-muted-foreground" />
+                  ) : (
+                    <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
+                  )}
+
+                  <Label className="text-xs font-medium">Visible en POS</Label>
+                </div>
+
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  {isProductoVenta
+                    ? "Permite mostrar este producto en el catálogo principal del POS."
+                    : "Los empaques, insumos y materiales operativos no aparecen en el POS principal."}
+                </p>
+              </div>
+
+              <Switch
+                checked={isProductoVenta ? value.visibleEnPos : false}
+                disabled={!isProductoVenta}
+                onCheckedChange={(checked) => patch({ visibleEnPos: checked })}
+              />
+            </div>
           </div>
 
           <div className="space-y-1 md:col-span-2">

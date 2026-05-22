@@ -138,7 +138,6 @@ export function RequisitionsTable({
   onDeleteRequisicion,
   handleRecepcionSinCargo,
   isPendingRecepcionSinCargo,
-  userId,
 }: RequisitionsTableProps) {
   const [sinCargoReq, setSinCargoReq] = useState<RequisitionResponseDTO | null>(
     null,

@@ -14,6 +14,7 @@ import {
   Categoria,
   TipoPresentacion,
   PresentationDetailDTO,
+  TipoProductoInventario,
 } from "./interfaces/DomainProdPressTypes";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/components/Context/ContextSucursal";
@@ -36,6 +37,8 @@ const initialProduct: ProductCreateDTO = {
     stockMinimo: 0,
     precioCostoActual: 0,
     categorias: [],
+    tipoInventario: TipoProductoInventario.PRODUCTO_VENTA,
+    visibleEnPos: true,
     tipoPresentacionId: null,
     tipoPresentacion: null,
   },
@@ -124,9 +127,6 @@ export default function ProductEditorContainer({
       const mapped = mapProductDto(detailData as ProductDetailDTO);
       setFormState(mapped);
       setOriginalDetail(detailData as ProductDetailDTO);
-    } else {
-      const mapped = mapPresentationDto(detailData as PresentationDetailDTO);
-      setFormState(mapped);
     }
   }, [detailData, mode]);
 
@@ -290,15 +290,17 @@ export default function ProductEditorContainer({
 export function mapProductDto(dto: ProductDetailDTO): ProductCreateDTO {
   return {
     basicInfo: {
-      nombre: dto.nombre,
-      codigoProducto: dto.codigoProducto,
+      nombre: dto.nombre ?? "",
+      codigoProducto: dto.codigoProducto ?? "",
       codigoProveedor: dto.codigoProveedor ?? "",
-      // 🔹 ahora usamos el del server
       stockMinimo: dto.stockMinimo ?? 0,
-      // 🔹 asegurar número
-      precioCostoActual: Number(dto.precioCostoActual ?? 0),
-
+      precioCostoActual: dto.precioCostoActual ?? 0,
       categorias: dto.categorias ?? [],
+
+      tipoInventario:
+        dto.tipoInventario ?? TipoProductoInventario.PRODUCTO_VENTA,
+      visibleEnPos: dto.visibleEnPos ?? true,
+
       tipoPresentacionId: dto.tipoPresentacionId ?? null,
       tipoPresentacion: dto.tipoPresentacion ?? null,
     },
@@ -332,47 +334,6 @@ export function mapProductDto(dto: ProductDetailDTO): ProductCreateDTO {
       activo: !!p.activo,
       categorias: p.categorias ?? [],
     })),
-  };
-}
-
-export function mapPresentationDto(
-  dto: PresentationDetailDTO,
-): ProductCreateDTO {
-  return {
-    basicInfo: {
-      nombre: "",
-      codigoProducto: "",
-      codigoProveedor: "",
-      stockMinimo: 0,
-      precioCostoActual: 0,
-      categorias: [],
-      tipoPresentacionId: null,
-      tipoPresentacion: null,
-    },
-    description: "",
-    images: [],
-    prices: [],
-    presentations: [
-      {
-        id: dto.id,
-        nombre: dto.nombre,
-        codigoBarras: dto.codigoBarras ?? "",
-        tipoPresentacionId: dto.tipoPresentacionId,
-        tipoPresentacion: dto.tipoPresentacion,
-        costoReferencialPresentacion: dto.costoReferencialPresentacion,
-        descripcion: dto.descripcion ?? "",
-        stockMinimo: dto.stockMinimo ?? 0,
-        precios: dto.precios.map((x) => ({
-          rol: x.rol,
-          orden: x.orden,
-          precio: x.precio,
-        })),
-        esDefault: !!dto.esDefault,
-        imagenes: dto.imagenesPresentacion, // ExistingImage[]
-        activo: dto.activo,
-        categorias: dto.categorias,
-      },
-    ],
   };
 }
 
