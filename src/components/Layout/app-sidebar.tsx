@@ -89,7 +89,14 @@ export const menuVendedor = [
 
   // 2. CONSULTAS RÁPIDAS
   { icon: Package, label: "Inventario General", href: "/inventario-stock" },
-
+  {
+    icon: ShoppingCart,
+    label: "Compras",
+    submenu: [
+      { icon: ClipboardList, label: "Requisiciones", href: "/requisiciones" },
+      { icon: ReceiptText, label: "Historial de Compras", href: "/compras" },
+    ],
+  },
   {
     icon: Wallet,
     label: "Caja Operativa",
@@ -98,6 +105,11 @@ export const menuVendedor = [
         icon: NotebookPen,
         label: "Apertura / Registro",
         href: "/registro-caja",
+      },
+      {
+        icon: ListOrdered,
+        label: "Movimientos de Caja",
+        href: "/movimientos-financieros",
       },
     ],
   },

@@ -53,6 +53,9 @@ export const erpEndpoints = {
     create: `/requisicion`,
     findAll: `/requisicion`,
     generate_purchase: `/compra-requisicion/generar-compra`,
+
+    recepcion_sin_cargo: `/compra-requisicion/requisicion/sin-cargo/recepcionar`,
+
     delete: (id: number) => `/requisicion/${id}`,
     get_one: (id: number) => `/requisicion/one-requisicion/${id}`,
     make_requisicion: (id: number) => `/requisicion/one-requisicion/${id}`,
